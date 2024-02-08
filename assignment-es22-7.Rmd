@@ -1,7 +1,7 @@
 ---
 title: "進化社会学課題７"
 author: "工科太郎"
-date: "2024/1/27"
+date: "2024/2/08"
 output: html_document
 ---
 
@@ -17,6 +17,30 @@ B) $N=200$, $N=20$にして同様のシミュレーションを行った結果�
 
 ```{r assignment-7-AB}
 # ここにコードを書いてください。
+library(extraDistr)
+henrich <- function(N,alpha,beta,gn) {
+  z <- matrix(nrow=N,ncol=gn+1)
+  z[,1] <- 0
+  for(t in 1:gn) {
+    z[,t+1] <- rgumbel(N,mu=max(z[,t]-alpha),sigma=beta)
+  }
+  return(z)
+}
+set.seed(123)
+alpha <- 1
+beta <- 1
+N <- c(20,50,200)
+gn <- 100
+
+for(i in 1:length(N)){
+  z <- henrich(N[i],alpha,beta,gn)
+  plot(0:gn,apply(z,2,max),xlim=c(0,gn),ylim=c(0,300),
+       xlab='generation',ylab='z',type='l',col='red')
+  par(new=T)
+  plot(0:gn,apply(z,2,mean),xlim=c(0,gn),ylim=c(0,300),
+       xlab='generation',ylab='z',type='l',col='blue')
+  par(new=T)
+}
 ```
 
 C) $\alpha=4$, $\beta=2$とする。$N$が50から1000まで50ずつ変化するとき、100世代後の集団における$z$の最大値がどのように変化するかを、横軸が$N$、縦軸が$z$の最大値のグラフを描いて確かめよ。
@@ -25,4 +49,21 @@ D) 上のグラフに、analytic関数を用いて、解析的予測値のグラ
 
 ```{r assignment-7-CD}
 # ここにコードを書いてください。
+analytic <- function(N,alpha,beta,gn) {
+  egamma <- 0.57721566490153
+  return(gn*(-alpha+beta*log(N)+beta*egamma))
+}
+
+N <- seq(50,1000,50)
+alpha <- 4
+beta <- 2
+gn <- 100
+res <- vector(length=length(N))
+for(i in 1:length(N)) {
+  z <- henrich(N[i],alpha,beta,gn)
+  res[i] <- max(z[,gn+1])
+}
+plot(N,res,xlim=c(0,1000),ylim=c(0,1200),xlab='N',ylab='z_max in generation 100')
+curve(analytic(x,alpha,beta,gn),xlim=c(0,1000),ylim=c(0,1200),xlab='',ylab='',add=T,col='red')
+
 ```
